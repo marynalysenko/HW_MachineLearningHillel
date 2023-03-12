@@ -1,7 +1,6 @@
 from typing import Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy
 from scipy.optimize import minimize
 
 
@@ -19,19 +18,15 @@ def add_noise(y: np.array) -> np.array:
     return y + noise
 
 
-def mle_regression(guess: np.array, x: np.array, y: np.array) -> float:
-    """Maximum Likelihood Estimation Regression"""
+def mse_regression(guess: np.array, x: np.array, y: np.array) -> float:
+    """MSE Minimization Regression"""
     m = guess[0]
     b = guess[1]
-    sigma = guess[2]
     # Predictions
     y_hat = m * x + b
-    # Compute PDF of observed values normally distributed around mean (y_hat)
-    # with a standard deviation of sigma
-    # Must watch: https://www.youtube.com/watch?v=Dn6b9fCIUpM
-    neg_ll = -np.sum(scipy.stats.norm.logpdf(y, loc=y_hat,
-                     scale=sigma))  # return negative LL
-    return neg_ll
+    # Get loss MSE
+    mse = (np.square(y - y_hat)).mean()
+    return mse
 
 
 if __name__ == "__main__":
@@ -45,13 +40,13 @@ if __name__ == "__main__":
     ax.legend(loc="best")
     plt.savefig("data.png")
 
-    # Initial guess of the parameters: [2, 2, 2] (m, b, sigma).
+    # Initial guess of the parameters: [2, 2] (m, b).
     # It doesn’t have to be accurate but simply reasonable.
-    initial_guess = np.array([5, 5, 5])
+    initial_guess = np.array([5, -3])
 
     # Maximizing the probability for point to be from the distribution
     results = minimize(
-        mle_regression,
+        mse_regression,
         initial_guess,
         args=(x, y,),
         method="Nelder-Mead",
@@ -66,7 +61,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.plot(x, y, "o", label="data")
     ax.plot(x, y_true, "b-", label="True")
-    ax.plot(xx, yy, "r--.", label="MLE")
+    ax.plot(xx, yy, "r--.", label="MSE")
     ax.legend(loc="best")
 
-    plt.savefig("mle_regression.png")
+    plt.savefig("mse_regression.png")
